@@ -1,0 +1,51 @@
+pipeline:
+  name: Traceable-AST
+  identifier: TraceableAST
+  projectIdentifier: tanayssto
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: tanays
+        repoName: crAPI
+        build: <+input>
+  stages:
+    - stage:
+        name: Traceable AST
+        identifier: Traceable_AST
+        description: ""
+        type: SecurityTests
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: false
+          buildIntelligence:
+            enabled: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Traceable
+                  name: API_DAST_1
+                  identifier: API_DAST_1
+                  spec:
+                    auth:
+                      access_token: MTJmZDAxOTAtM2NmOC00NGMxLWE4YWItZjc3NDY3ZTA3MTk1
+                      domain: https://api-dev.traceable.ai
+                    mode: extraction
+                    config: default
+                    target:
+                      type: instance
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+                    tool:
+                      suite_id: 2dbf201f-01c3-49ad-88d1-a214b793c976
