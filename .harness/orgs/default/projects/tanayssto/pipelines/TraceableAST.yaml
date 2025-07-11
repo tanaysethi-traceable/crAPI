@@ -38,7 +38,7 @@ pipeline:
                   spec:
                     auth:
                       access_token: MTJmZDAxOTAtM2NmOC00NGMxLWE4YWItZjc3NDY3ZTA3MTk1
-                      domain: https://api-dev.traceable.ai
+                      domain: https://api.apac.traceable.ai
                     mode: extraction
                     config: default
                     target:
