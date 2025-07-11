@@ -1,5 +1,5 @@
 pipeline:
-  name: Security
+  name: GitLeaks
   identifier: Security
   projectIdentifier: tanayssto
   orgIdentifier: default
