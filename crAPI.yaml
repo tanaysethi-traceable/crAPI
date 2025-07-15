@@ -1,0 +1,44 @@
+pipeline:
+  name: SCS-Demo
+  identifier: SCSDemo
+  projectIdentifier: tanayssto
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: tanays
+        repoName: crAPI
+        build: <+input>
+  stages:
+    - stage:
+        name: SCS
+        identifier: SCS
+        description: ""
+        type: SecurityTests
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: false
+          buildIntelligence:
+            enabled: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: SscaCompliance
+                  name: SCS Compliance_1
+                  identifier: SCSCompliance_1
+                  spec:
+                    source:
+                      type: github
+                      spec:
+                        connectorRef: tanays
+                        repoName: crAPI
+                        scan_org: true
