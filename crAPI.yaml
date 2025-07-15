@@ -32,17 +32,6 @@ pipeline:
           execution:
             steps:
               - step:
-                  type: SscaCompliance
-                  name: SCS Compliance_1
-                  identifier: SCSCompliance_1
-                  spec:
-                    source:
-                      type: github
-                      spec:
-                        connectorRef: tanays
-                        repoName: crAPI
-                        scan_org: true
-              - step:
                   type: SscaOrchestration
                   name: SBOM Orchestration_1
                   identifier: SBOMOrchestration_1
