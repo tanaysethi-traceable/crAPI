@@ -23,12 +23,6 @@ pipeline:
             override: false
           buildIntelligence:
             enabled: true
-          platform:
-            os: Linux
-            arch: Amd64
-          runtime:
-            type: Cloud
-            spec: {}
           execution:
             steps:
               - step:
@@ -92,3 +86,11 @@ pipeline:
                     tool:
                       suite_id: 2dbf201f-01c3-49ad-88d1-a214b793c976
                       runner_id: 04367ea8-17f2-5fc5-b9ad-91a211ab5773
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: tanayk8
+              namespace: default
+              automountServiceAccountToken: true
+              nodeSelector: {}
+              os: Linux
