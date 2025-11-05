@@ -89,7 +89,7 @@ pipeline:
                       runner_id: 04367ea8-17f2-5fc5-b9ad-91a211ab5773
           platform:
             os: Linux
-            arch: Arm64
+            arch: Amd64
           runtime:
             type: Cloud
             spec: {}
