@@ -90,7 +90,7 @@ pipeline:
           infrastructure:
             type: KubernetesDirect
             spec:
-              connectorRef: tanayk8
+              connectorRef: tanaysdelegate
               namespace: default
               automountServiceAccountToken: true
               nodeSelector: {}
