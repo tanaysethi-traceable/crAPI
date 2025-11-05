@@ -8,8 +8,9 @@ pipeline:
     ci:
       codebase:
         connectorRef: tanays
-        repoName: crAPI
+        repoName: WebGoat
         build: <+input>
+        sparseCheckout: []
   stages:
     - stage:
         name: Security
