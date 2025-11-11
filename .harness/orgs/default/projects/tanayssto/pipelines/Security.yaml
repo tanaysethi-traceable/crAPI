@@ -44,3 +44,6 @@ pipeline:
                     advanced:
                       log:
                         level: info
+                  enforce:
+                    policySets:
+                      - tanaytest
