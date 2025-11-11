@@ -63,3 +63,20 @@ pipeline:
                   enforce:
                     policySets:
                       - tanaytest
+  notificationRules:
+    - name: test
+      identifier: test
+      pipelineEvents:
+        - type: StageSuccess
+          forStages:
+            - Security
+      notificationMethod:
+        type: Email
+        spec:
+          userGroups: []
+          recipients:
+            - tanay.sethi@harness.io
+      template:
+        versionLabel: "1"
+        templateRef: TestNotification
+      enabled: true
