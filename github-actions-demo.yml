@@ -16,17 +16,17 @@ jobs:
         uses: Traceableai/ast-action@main
         with:
           step_name: 'init and run'
-          client_scan_token: ${{ secrets.CLIENT_SCAN_TOKEN_DEMO }}
+          client_scan_token: ${{ secrets.CLIENT_SCAN_TOKEN }}
           cli_version: 'latest'
-          scan_suite: 'github-actions-test-suite'
-          traceable_server: ${{ secrets.TRACEABLE_SERVER_DEMO }}
+          scan_suite: 'crAPI'
+          traceable_server: ${{ secrets.TRACEABLE_SERVER }}
       - name: Stop Scan
         if: always()
         uses: Traceableai/ast-action@main
         with:
           step_name: 'stop'
-          client_scan_token: ${{ secrets.CLIENT_SCAN_TOKEN_DEMO }}
-          traceable_server: ${{ secrets.TRACEABLE_SERVER_DEMO }}
+          client_scan_token: ${{ secrets.CLIENT_SCAN_TOKEN }}
+          traceable_server: ${{ secrets.TRACEABLE_SERVER }}
   functionalTest:
     runs-on: ubuntu-20.04
     steps:
