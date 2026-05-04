@@ -13,19 +13,19 @@
 
 
 # Node build
-FROM node:16 AS build
+FROM node:20 AS build
 RUN mkdir /app
 WORKDIR /app
 COPY ./*.json /app/
 RUN npm install --silent
 COPY ./src /app/src
 COPY ./public /app/public
-COPY ./src/config.ts.template /app/src/config.ts
-RUN NODE_OPTIONS=--max-old-space-size=1536 npm run build
+RUN cp ./src/config.js.template ./src/config.js
+RUN NODE_OPTIONS=--max_old_space_size=4096 npm run build
 RUN ls /app/build
 
 # Main Image
-FROM openresty/openresty:1.25.3.1-alpine
+FROM openresty/openresty:alpine
 RUN apk add gettext curl
 # React
 RUN rm /etc/nginx/conf.d/default.conf
@@ -35,6 +35,11 @@ COPY ./nginx.conf.template /etc/nginx/conf.d/default.conf.template
 COPY ./nginx.ssl.conf.template /etc/nginx/conf.d/default.ssl.conf.template
 RUN mkdir -p /app
 COPY ./certs /app/certs
+RUN mkdir -p /usr/share/nginx/html/debug && \
+    touch /usr/share/nginx/html/debug/access.log && \
+    chmod 755 /usr/share/nginx/html/debug && \
+    chmod 666 /usr/share/nginx/html/debug/access.log && \
+    chown -R nobody:nobody /usr/share/nginx/html/debug
 RUN echo "daemon off;" >> /usr/local/openresty/nginx/conf/nginx.conf
 EXPOSE 80
 EXPOSE 443

@@ -53,6 +53,9 @@ export const POST_TITLE_REQUIRED: string = "Please enter title for post!";
 export const POST_DESC_REQUIRED: string = "Please enter description for Post!";
 export const COMMENT_REQUIRED: string = "Please enter a comment!";
 export const COUPON_CODE_REQUIRED: string = "Please enter a coupon code!";
+export const PRODUCT_DETAILS_REQUIRED: string =
+  "Please enter all product details!";
+export const COUPON_AMOUNT_REQUIRED: string = "Please enter a coupon amount!";
 
 export const NO_VEHICLE_DESC_1: string =
   "Your newly purchased Vehicle Details have been sent to you email address. Please check your email for the VIN and PIN code of your vehicle using the MailHog web portal.";
@@ -83,6 +86,9 @@ export const ORDER_NOT_RETURNED: string = "Could not return order";
 export const INVALID_COUPON_CODE: string = "Invalid Coupon Code";
 export const COUPON_APPLIED: string = "Coupon applied";
 export const COUPON_NOT_APPLIED: string = "Could not validate coupon";
+export const COUPON_NOT_CREATED: string = "Could not create coupon";
+export const PRODUCT_NOT_ADDED: string = "Could not add product";
+export const NEW_PRODUCT_ADDED: string = "Product added!";
 export const INVALID_CREDS: string = "Invalid Username or Password";
 export const INVALID_CODE_CREDS: string = "Invalid Email or Code";
 export const SIGN_UP_SUCCESS: string = "User Registered Successfully!";
@@ -100,6 +106,8 @@ export const EMAIL_NOT_CHANGED: string = "Could not change email id";
 export const NO_SERVICES: string = "Could not get mechanic details";
 export const EMAIL_NOT_SENT: string = "Could not resend mail";
 export const VEHICLE_NOT_ADDED: string = "Internal Server error! Wrong VIN!";
+export const VEHICLE_NOT_REGISTERED: string =
+  "Could not register vehicle. Try again!";
 export const NO_VEHICLES: string = "Could not get vehicles";
 export const NO_MECHANICS: string = "Could not get mechanic details";
 export const SERVICE_REQUEST_SENT: string =

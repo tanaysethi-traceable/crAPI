@@ -6,7 +6,6 @@ metadata:
     app: crapi-identity
 data:
   DB_HOST: postgresdb
-  DB_DRIVER: postgresql
   JWT_SECRET: crapi #Used for creating a JWT. Can be anything
   DB_USER: admin
   DB_PASSWORD: crapisecretpassword
@@ -27,3 +26,5 @@ data:
   JWT_EXPIRATION: "604800000"
   SMTP_STARTTLS: "true"
   SERVER_PORT: "8080"
+  TLS_ENABLED: "false"
+  API_GATEWAY_URL: "https://api.mypremiumdealership.com"

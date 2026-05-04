@@ -1,6 +1,12 @@
+log_format debug_log '$remote_addr - $remote_user [$time_local] '
+                     '"$request" $status $body_bytes_sent '
+                     '"$http_referer" "$http_user_agent" '
+                     'upstream: "$upstream_addr" '
+                     'request_body: "$request_body"';
 
 server {
   listen 443 ssl;
+  access_log /usr/share/nginx/html/debug/access.log debug_log;
   server_name _;
   ssl_certificate /app/certs/server.crt;
   ssl_certificate_key /app/certs/server.key;
@@ -22,6 +28,7 @@ server {
     proxy_pass  ${HTTP_PROTOCOL}://${COMMUNITY_SERVICE};
     proxy_set_header Host ${COMMUNITY_SERVICE};
     proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     sub_filter_types application/json text/html;
     sub_filter "://${COMMUNITY_SERVICE}" "://$http_host";
     sub_filter_once off;
@@ -39,6 +46,7 @@ server {
     proxy_pass  ${HTTP_PROTOCOL}://${IDENTITY_SERVICE};
     proxy_set_header Host ${IDENTITY_SERVICE};
     proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
 
   location /workshop/ {
@@ -53,8 +61,27 @@ server {
     proxy_pass  ${HTTP_PROTOCOL}://${WORKSHOP_SERVICE};
     proxy_set_header Host ${WORKSHOP_SERVICE};
     proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     sub_filter_types application/json text/html;
     sub_filter "${HTTP_PROTOCOL}://${WORKSHOP_SERVICE}" "$scheme://$http_host";
+    sub_filter_once off;
+  }
+
+  location /chatbot/ {
+    rewrite_by_lua_block {
+      ngx.req.read_body()  -- explicitly read the req body
+      local body = ngx.req.get_body_data()
+      if body then
+        body = ngx.re.gsub(body, ngx.var.scheme.."://"..ngx.var.http_host, "${HTTP_PROTOCOL}://${CHATBOT_SERVICE}")
+        ngx.req.set_body_data(body)
+      end
+    }
+    proxy_pass  ${HTTP_PROTOCOL}://${CHATBOT_SERVICE};
+    proxy_set_header Host ${CHATBOT_SERVICE};
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    sub_filter_types application/json text/html;
+    sub_filter "://${CHATBOT_SERVICE}" "://$http_host";
     sub_filter_once off;
   }
 
@@ -64,6 +91,13 @@ server {
 
   location /static {
     try_files $uri $uri/ =404;
+  }
+
+  location /debug/ {
+    alias /usr/share/nginx/html/debug/;
+    autoindex on;
+    autoindex_exact_size off;
+    autoindex_localtime on;
   }
 
   location /.well-known/jwks.json {
@@ -104,6 +138,7 @@ server {
 server {
   listen 80;
   server_name _;
+  access_log /usr/share/nginx/html/debug/access.log debug_log;
   client_max_body_size 50M;
   index index.html;
   root /usr/share/nginx/html;
@@ -120,6 +155,7 @@ server {
     proxy_pass  ${HTTP_PROTOCOL}://${COMMUNITY_SERVICE};
     proxy_set_header Host ${COMMUNITY_SERVICE};
     proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     sub_filter_types application/json text/html;
     sub_filter "://${COMMUNITY_SERVICE}" "://$http_host";
     sub_filter_once off;
@@ -137,6 +173,7 @@ server {
     proxy_pass  ${HTTP_PROTOCOL}://${IDENTITY_SERVICE};
     proxy_set_header Host ${IDENTITY_SERVICE};
     proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
 
   location /workshop/ {
@@ -151,9 +188,30 @@ server {
     proxy_pass  ${HTTP_PROTOCOL}://${WORKSHOP_SERVICE};
     proxy_set_header Host ${WORKSHOP_SERVICE};
     proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     sub_filter_types application/json text/html;
     sub_filter "${HTTP_PROTOCOL}://${WORKSHOP_SERVICE}" "$scheme://$http_host";
     sub_filter_once off;
+  }
+
+  location /chatbot/ {
+    rewrite_by_lua_block {
+      ngx.req.read_body()  -- explicitly read the req body
+      local body = ngx.req.get_body_data()
+      if body then
+        body = ngx.re.gsub(body, ngx.var.scheme.."://"..ngx.var.http_host, "${HTTP_PROTOCOL}://${CHATBOT_SERVICE}")
+        ngx.req.set_body_data(body)
+      end
+    }
+    proxy_pass  ${HTTP_PROTOCOL}://${CHATBOT_SERVICE};
+    proxy_set_header Host ${CHATBOT_SERVICE};
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    sub_filter_types application/json text/html;
+    sub_filter "${HTTP_PROTOCOL}://${CHATBOT_SERVICE}" "$scheme://$http_host";
+    sub_filter_once off;
+    proxy_ssl_verify off;
+    proxy_ssl_trusted_certificate /app/certs/server.crt;
   }
 
   location /images {
@@ -162,6 +220,13 @@ server {
 
   location /static {
     try_files $uri $uri/ =404;
+  }
+
+  location /debug/ {
+    alias /usr/share/nginx/html/debug/;
+    autoindex on;
+    autoindex_exact_size off;
+    autoindex_localtime on;
   }
 
   location /.well-known/jwks.json {

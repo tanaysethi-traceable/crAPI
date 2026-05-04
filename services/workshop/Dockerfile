@@ -12,7 +12,7 @@
 # limitations under the License.
 
 
-FROM python:3.10-alpine AS build
+FROM python:3.11-alpine AS build
 # Not using alpine based on suggestion
 # https://pythonspeed.com/articles/alpine-docker-python/
 
@@ -24,7 +24,9 @@ RUN apk add --update --no-cache --virtual .build-deps \
         libffi-dev gcc py3-pip \
         python3-dev \
         musl-dev \
-        libffi-dev
+        libffi-dev \
+        cairo-dev \
+        pkgconfig
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -33,10 +35,11 @@ WORKDIR /app
 COPY ./ /app
 RUN pip install wheel && pip wheel . --wheel-dir /app/wheels
 
-FROM python:3.10-alpine
+FROM python:3.11-alpine
 COPY --from=build /app /app
 WORKDIR /app
-RUN apk update && apk add --no-cache postgresql-libs curl
+RUN apk update && apk add --no-cache postgresql-libs curl cairo
+RUN pip install "setuptools>=70.0.0,<82"
 RUN pip install --no-index --find-links=/app/wheels -r requirements.txt
 COPY ./certs /app/certs
 COPY health.sh /app/health.sh

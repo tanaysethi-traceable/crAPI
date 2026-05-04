@@ -41,6 +41,8 @@ def get_env_value(env_variable):
         raise ImproperlyConfigured(error_msg)
 
 
+FILES_LIMIT = int(os.environ.get("FILES_LIMIT", 1000))
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -108,7 +110,7 @@ TEST_OUTPUT_DIR = os.path.join(BASE_DIR, "test-reports")
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'utils')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -182,7 +184,13 @@ DATABASES = {
             "NAME": "test_crapi",
             "USER": get_env_value("DB_USER"),
         },
-        "CONN_MAX_AGE": 0,
+        # Enable persistent database connections (600 seconds = 10 minutes)
+        # This prevents creating a new connection for every request
+        "CONN_MAX_AGE": int(os.environ.get("DB_CONN_MAX_AGE", 600)),
+        # Add connection pool settings for better performance under load
+        "OPTIONS": {
+            "connect_timeout": 10,
+        },
     },
     "mongodb": {
         "ENGINE": "djongo",

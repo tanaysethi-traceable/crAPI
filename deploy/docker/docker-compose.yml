@@ -15,10 +15,10 @@ services:
   crapi-identity:
     container_name: crapi-identity
     image: crapi/crapi-identity:${VERSION:-latest}
-    #ports:
+    # ports:
     #  - "${LISTEN_IP:-127.0.0.1}:8080:8080"
     volumes:
-      - ./keys:/keys
+      - ./keys:/app/keys
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - DB_NAME=crapi
@@ -130,6 +130,14 @@ services:
       - TLS_ENABLED=${TLS_ENABLED:-false}
       - TLS_CERTIFICATE=certs/server.crt
       - TLS_KEY=certs/server.key
+      - FILES_LIMIT=1000
+      # Gunicorn configuration for better performance under load
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-4}
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
+      - GUNICORN_MAX_REQUESTS=${GUNICORN_MAX_REQUESTS:-1000}
+      - GUNICORN_MAX_REQUESTS_JITTER=${GUNICORN_MAX_REQUESTS_JITTER:-50}
+      # Database connection pooling (10 minutes)
+      - DB_CONN_MAX_AGE=${DB_CONN_MAX_AGE:-600}
     depends_on:
       postgresdb:
         condition: service_healthy
@@ -147,8 +155,72 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
-          memory: 128M
+          cpus: '1.0'
+          memory: 512M
+
+  crapi-chatbot:
+    container_name: crapi-chatbot
+    image: crapi/crapi-chatbot:${VERSION:-latest}
+    ports:
+      - "${LISTEN_IP:-127.0.0.1}:5500:5500" # MCP server
+    environment:
+      - TLS_ENABLED=${TLS_ENABLED:-false}
+      - SERVER_PORT=${CHATBOT_SERVER_PORT:-5002}
+      - WEB_SERVICE=crapi-web
+      - IDENTITY_SERVICE=crapi-identity:${IDENTITY_SERVER_PORT:-8080}
+      - DB_NAME=crapi
+      - DB_USER=admin
+      - DB_PASSWORD=crapisecretpassword
+      - DB_HOST=postgresdb
+      - DB_PORT=5432
+      - MONGO_DB_HOST=mongodb
+      - MONGO_DB_PORT=27017
+      - MONGO_DB_USER=admin
+      - MONGO_DB_PASSWORD=crapisecretpassword
+      - MONGO_DB_NAME=crapi
+      - API_USER=admin@example.com
+      - API_PASSWORD=Admin!123
+      - OPENAPI_SPEC=/app/resources/crapi-openapi-spec.json
+      - CHATBOT_LIFE=${CHATBOT_LIFE:-1}
+      - CHATBOT_LLM_PROVIDER=${CHATBOT_LLM_PROVIDER:-openai}
+      - CHATBOT_LLM_MODEL=${CHATBOT_LLM_MODEL:-}
+      - CHATBOT_EMBEDDINGS_MODEL=${CHATBOT_EMBEDDINGS_MODEL:-}
+      - CHATBOT_EMBEDDINGS_DIMENSIONS=${CHATBOT_EMBEDDINGS_DIMENSIONS:-1536}
+      - CHATBOT_OPENAI_API_KEY=${CHATBOT_OPENAI_API_KEY:-}
+      - CHATBOT_OPENAI_BASE_URL=${CHATBOT_OPENAI_BASE_URL:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_AD_TOKEN=${AZURE_AD_TOKEN:-}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2024-02-15-preview}
+      - AZURE_OPENAI_CHAT_DEPLOYMENT=${AZURE_OPENAI_CHAT_DEPLOYMENT:-}
+      - AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=${AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - COHERE_API_KEY=${COHERE_API_KEY:-}
+      - AWS_BEARER_TOKEN_BEDROCK=${AWS_BEARER_TOKEN_BEDROCK:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
+      - AWS_REGION=${AWS_REGION:-}
+      - AWS_ASSUME_ROLE_ARN=${AWS_ASSUME_ROLE_ARN:-}
+      - AWS_EXTERNAL_ID=${AWS_EXTERNAL_ID:-}
+      - AWS_ROLE_SESSION_NAME=${AWS_ROLE_SESSION_NAME:-crapi-chatbot-session}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
+      - VERTEX_PROJECT=${VERTEX_PROJECT:-}
+      - VERTEX_LOCATION=${VERTEX_LOCATION:-}
+      - MAX_CONTENT_LENGTH=50000
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      crapi-identity:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    # ports:
+    #  - "${LISTEN_IP:-127.0.0.1}:5002:5002"
 
   crapi-web:
     container_name: crapi-web
@@ -162,6 +234,7 @@ services:
       - COMMUNITY_SERVICE=crapi-community:${COMMUNITY_SERVER_PORT:-8087}
       - IDENTITY_SERVICE=crapi-identity:${IDENTITY_SERVER_PORT:-8080}
       - WORKSHOP_SERVICE=crapi-workshop:${WORKSHOP_SERVER_PORT:-8000}
+      - CHATBOT_SERVICE=crapi-chatbot:${CHATBOT_SERVER_PORT:-5002}
       - MAILHOG_WEB_SERVICE=mailhog:8025
       - TLS_ENABLED=${TLS_ENABLED:-false}
     depends_on:
@@ -227,6 +300,22 @@ services:
           cpus: '0.3'
           memory: 128M
 
+  chromadb:
+    container_name: chromadb
+    image: 'chromadb/chroma:latest'
+    environment:
+      IS_PERSISTENT: 'TRUE'
+    healthcheck:
+      test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
+      interval: 15s
+      timeout: 15s
+      retries: 15
+      start_period: 20s
+    volumes:
+      - chromadb-data:/data
+    # ports:
+    #   - "${LISTEN_IP:-127.0.0.1}:8000:8000"
+
   mailhog:
     user: root
     container_name: mailhog
@@ -254,7 +343,7 @@ services:
     #ports:
     #  - "${LISTEN_IP:-127.0.0.1}:8443:443" # https
     healthcheck:
-      test: echo -n "GET / HTTP/1.1\n\n" > /dev/tcp/127.0.0.1/443
+      test: bash -c 'echo -n "GET / HTTP/1.1\n\n" > /dev/tcp/127.0.0.1/443'
       interval: 15s
       timeout: 15s
       retries: 15
@@ -268,3 +357,4 @@ services:
 volumes:
   mongodb-data:
   postgresql-data:
+  chromadb-data:

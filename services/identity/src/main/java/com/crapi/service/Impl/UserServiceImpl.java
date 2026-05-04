@@ -25,7 +25,6 @@ import com.crapi.exception.EntityNotFoundException;
 import com.crapi.model.*;
 import com.crapi.repository.*;
 import com.crapi.service.UserService;
-import com.crapi.utils.ApiKeyGenerator;
 import com.crapi.utils.EmailTokenGenerator;
 import com.crapi.utils.MailBody;
 import com.crapi.utils.OTPGenerator;
@@ -34,6 +33,7 @@ import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import java.text.ParseException;
+import java.time.LocalDate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.impl.Log4jContextFactory;
@@ -173,6 +173,7 @@ public class UserServiceImpl implements UserService {
     User user = userRepository.findByEmail(email);
     if (user != null) {
       user.setPassword(encoder.encode(password));
+      user.setPasswordUpdatedAt(LocalDate.now());
       userRepository.saveAndFlush(user);
     }
     return user;
@@ -189,6 +190,7 @@ public class UserServiceImpl implements UserService {
     User user = getUserFromToken(request);
     if (user != null) {
       user.setPassword(encoder.encode(loginForm.getPassword()));
+      user.setPasswordUpdatedAt(LocalDate.now());
       userRepository.saveAndFlush(user);
       return new CRAPIResponse(UserMessage.PASSWORD_GOT_RESET, 200);
     }
@@ -331,6 +333,7 @@ public class UserServiceImpl implements UserService {
       if (user != null) {
         return user;
       } else {
+        log.error("User not found with email: {}", username);
         throw new EntityNotFoundException(User.class, "userEmail", username);
       }
     } catch (ParseException exception) {
@@ -460,18 +463,44 @@ public class UserServiceImpl implements UserService {
     return jwtResponse;
   }
 
+  /**
+   * @param request None
+   * @param loginForm LoginForm with user email and password
+   * @return ApiKeyResponse with generated API key
+   */
   @Override
   @Transactional
-  public ApiKeyResponse generateApiKey(HttpServletRequest request) {
-    User user = getUserFromToken(request);
-    if (user != null) {
-      String apiKey = ApiKeyGenerator.generateRandom(512);
-      log.debug("Api Key for user {}: {}", user.getEmail(), apiKey);
-      user.setApiKey(apiKey);
-      userRepository.save(user);
-      return new ApiKeyResponse(user.getApiKey(), UserMessage.API_KEY_GENERATED_MESSAGE);
+  public ApiKeyResponse generateApiKey(HttpServletRequest request, LoginForm loginForm) {
+    Authentication authentication =
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword()));
+    if (authentication == null) {
+      return new ApiKeyResponse(null, UserMessage.INVALID_CREDENTIALS);
     }
-    return new ApiKeyResponse("");
+    log.info("Generate Api Key for user: {}", loginForm.getEmail());
+    User user;
+    if (request == null || jwtAuthTokenFilter.getToken(request) == null) {
+      user = userRepository.findByEmail(loginForm.getEmail());
+    } else {
+      user = getUserFromToken(request);
+    }
+    if (user == null) {
+      log.debug("User not found to generate API key");
+      return new ApiKeyResponse(null, UserMessage.INVALID_CREDENTIALS);
+    }
+    // if apiKey is already generated
+    if (user.getApiKey() != null) {
+      log.debug("Api Key already generated for user: {}", user.getEmail());
+      return new ApiKeyResponse(user.getApiKey());
+    }
+    String apiKey = jwtProvider.generateApiKey(user);
+    log.debug("Api Key for user {}: {}", user.getEmail(), apiKey);
+    if (apiKey == null) {
+      return new ApiKeyResponse(null, UserMessage.API_KEY_GENERATION_FAILED);
+    }
+    user.setApiKey(apiKey);
+    userRepository.saveAndFlush(user);
+    return new ApiKeyResponse(user.getApiKey(), UserMessage.API_KEY_GENERATED_MESSAGE);
   }
 
   /**

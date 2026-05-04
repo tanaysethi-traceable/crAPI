@@ -42,6 +42,7 @@ import PostContainer from "../../containers/post/post";
 import VehicleServiceDashboardContainer from "../../containers/vehicleServiceDashboard/vehicleServiceDashboard";
 import ServiceReportContiner from "../../containers/serviceReport/serviceReport";
 import MechanicServiceRequestContainer from "../../containers/mechanicServiceRequest/mechanicServiceRequest";
+import ChatBotComponent from "../bot/Bot";
 import {
   logOutUserAction,
   validateAccessTokenAction,
@@ -107,7 +108,11 @@ const AfterLogin: React.FC<AfterLoginProps> = ({
     return <Navigate to="/login" />;
   }
 
-  if (!componentRole || (componentRole && componentRole === userRole)) {
+  if (
+    !componentRole ||
+    componentRole === userRole ||
+    (componentRole === roleTypes.ROLE_USER && userRole === roleTypes.ROLE_ADMIN)
+  ) {
     return <Component />;
   }
 
@@ -447,6 +452,11 @@ const StyledComp: React.FC<PropsFromRedux> = (props) => {
               }
             />
           </Routes>
+          <ChatBotComponent
+            accessToken={props.accessToken}
+            isLoggedIn={props.isLoggedIn}
+            role={props.role}
+          />
         </Content>
       </Layout>
     </Spin>

@@ -16,7 +16,9 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -25,14 +27,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//AddNewPost add post in database,
-//@return HTTP Status
-//@params ResponseWriter, Request
-//Server have database connection
+// AddNewPost add post in database,
+// @return HTTP Status
+// @params ResponseWriter, Request
+// Server have database connection
 func (s *Server) AddNewPost(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Println("Error closing request body:", err)
+		}
+	}()
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -54,10 +60,10 @@ func (s *Server) AddNewPost(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, savedPost)
 }
 
-//GetPostByID fetch the post by ID,
-//@return HTTP Status
-//@params ResponseWriter, Request
-//Server have database connection
+// GetPostByID fetch the post by ID,
+// @return HTTP Status
+// @params ResponseWriter, Request
+// Server have database connection
 func (s *Server) GetPostByID(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -71,9 +77,7 @@ func (s *Server) GetPostByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-
-
-//GetPost Vulnerabilities
+// GetPost Vulnerabilities
 func (s *Server) GetPost(w http.ResponseWriter, r *http.Request) {
 	//post := models.Post{}
 	limit_param := r.URL.Query().Get("limit")
@@ -107,15 +111,58 @@ func (s *Server) GetPost(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, posts)
 }
 
-//Comment will add comment in perticular post,
-//@return HTTP Post Object
-//@params ResponseWriter, Request
-//Server have database connection
+// GetPostsByTitle filters posts by title
+func (s *Server) GetPostsByTitle(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Query().Get("title")
+	if title == "" {
+		responses.ERROR(w, http.StatusBadRequest, errors.New("title parameter is required"))
+		return
+	}
+
+	limit_param := r.URL.Query().Get("limit")
+	var limit int64 = 30
+	err := error(nil)
+	if limit_param != "" {
+		limit, err = strconv.ParseInt(limit_param, 10, 64)
+		if err != nil {
+			limit = 30
+		}
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	var offset int64 = 0
+	offset_param := r.URL.Query().Get("offset")
+	if offset_param != "" {
+		offset, err = strconv.ParseInt(offset_param, 10, 64)
+		if err != nil {
+			offset = 0
+		}
+	}
+
+	posts, err := models.FindPostsByTitle(s.Client, title, offset, limit)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK, posts)
+}
+
+// Comment will add comment in perticular post,
+// @return HTTP Post Object
+// @params ResponseWriter, Request
+// Server have database connection
 func (s *Server) Comment(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	body, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Println("Error closing request body:", err)
+		}
+	}()
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return

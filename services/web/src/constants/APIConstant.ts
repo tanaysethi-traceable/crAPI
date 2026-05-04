@@ -19,11 +19,13 @@ interface APIServiceType {
   IDENTITY_SERVICE: string;
   WORKSHOP_SERVICE: string;
   COMMUNITY_SERVICE: string;
+  CHATBOT_SERVICE: string;
 }
 
 export const APIService: APIServiceType = {
   IDENTITY_SERVICE: crapienv.IDENTITY_SERVICE,
   WORKSHOP_SERVICE: crapienv.WORKSHOP_SERVICE,
+  CHATBOT_SERVICE: crapienv.CHATBOT_SERVICE,
   COMMUNITY_SERVICE: crapienv.COMMUNITY_SERVICE,
 };
 
@@ -40,6 +42,7 @@ export const requestURLS: RequestURLSType = {
   FORGOT_PASSWORD: "api/auth/forget-password",
   VERIFY_OTP: "api/auth/v3/check-otp",
   LOGIN_TOKEN: "api/auth/v4.0/user/login-with-token",
+  REGISTER_VEHICLE: "api/v2/vehicle/register_vehicle",
   ADD_VEHICLE: "api/v2/vehicle/add_vehicle",
   GET_VEHICLES: "api/v2/vehicle/vehicles",
   RESEND_MAIL: "api/v2/vehicle/resend_email",
@@ -63,6 +66,7 @@ export const requestURLS: RequestURLSType = {
   UPDATE_SERVICE_REQUEST_STATUS: "api/mechanic/service_request/<serviceId>",
   GET_VEHICLE_SERVICES: "api/merchant/service_requests/<vehicleVIN>",
   GET_SERVICE_REPORT: "api/mechanic/mechanic_report",
+  DOWNLOAD_SERVICE_REPORT: "api/mechanic/download_report",
   BUY_PRODUCT: "api/shop/orders",
   GET_ORDERS: "api/shop/orders/all",
   GET_ORDER_BY_ID: "api/shop/orders/<orderId>",
@@ -73,5 +77,6 @@ export const requestURLS: RequestURLSType = {
   GET_POST_BY_ID: "api/v2/community/posts/<postId>",
   ADD_COMMENT: "api/v2/community/posts/<postId>/comment",
   VALIDATE_COUPON: "api/v2/coupon/validate-coupon",
+  NEW_COUPON: "api/v2/coupon/new-coupon",
   VALIDATE_TOKEN: "api/auth/verify",
 };
