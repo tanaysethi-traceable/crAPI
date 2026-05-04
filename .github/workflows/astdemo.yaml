@@ -8,7 +8,7 @@ on:
 
 jobs:
   InitAndRunAstScan:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -28,7 +28,7 @@ jobs:
           client_scan_token: ${{ secrets.CLIENT_SCAN_TOKEN }}
           traceable_server: ${{ secrets.TRACEABLE_SERVER }}
   functionalTest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Run a loop as functional test (This is sample)
         run: |
