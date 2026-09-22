@@ -45,6 +45,8 @@ pipeline:
           runtime:
             type: Cloud
             spec: {}
+        when:
+          pipelineStatus: All
   allowStageExecutions: true
   identifier: Traceable_DAST_Scan
   name: Traceable DAST Scan
