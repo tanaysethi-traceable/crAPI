@@ -36,9 +36,6 @@ pipeline:
                         level: debug
                     tool:
                       suite_id: eff7ffd6-14d1-4af4-8e95-573cd38d3209
-                  when:
-                    stageStatus: Success
-                    condition: "false"
           platform:
             os: Linux
             arch: Amd64
