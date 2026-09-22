@@ -47,6 +47,48 @@ pipeline:
             spec: {}
         when:
           pipelineStatus: All
+    - stage:
+        name: Semgrep
+        identifier: Semgrep
+        description: ""
+        type: SecurityTests
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: true
+          buildIntelligence:
+            enabled: true
+          platform:
+            os: Linux
+            arch: Arm64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: HarnessSAST
+                  name: HarnessCode_1
+                  identifier: HarnessCode_1
+                  spec:
+                    target:
+                      detection: auto
+                      type: repository
+                    advanced:
+                      log:
+                        level: info
+                      args: {}
+                    mode: orchestration
+                    config: sast
+                    tool:
+                      target_language: ""
+                      app_name: ""
   allowStageExecutions: true
   identifier: Traceable_DAST_Scan
   name: Traceable DAST Scan
+  properties:
+    ci:
+      codebase:
+        repoName: crAPI
+        build: <+input>
