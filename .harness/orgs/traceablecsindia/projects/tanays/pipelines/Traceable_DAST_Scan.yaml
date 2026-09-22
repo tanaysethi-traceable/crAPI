@@ -48,7 +48,7 @@ pipeline:
         when:
           pipelineStatus: All
     - stage:
-        name: Semgrep
+        name: Harness STO
         identifier: Semgrep
         description: ""
         type: SecurityTests
@@ -57,6 +57,7 @@ pipeline:
           caching:
             enabled: true
             override: true
+            paths: []
           buildIntelligence:
             enabled: true
           platform:
